@@ -79,6 +79,31 @@ def add_recipe(filename):
 
     return recipe_name, ingredients
 
+def get_shop_list_by_dishes(dishes, person_count, cook_book):
+    """Возвращает список ингредиентов по заданным блюдам и количеству персон."""
+    shop_list = {}
+
+    for dish in dishes:
+        if dish in cook_book:
+            for ingredient in cook_book[dish]:
+                ingredient_name = ingredient['ingredient_name']
+                quantity = ingredient['quantity'] * person_count
+                measure = ingredient['measure']
+
+                if ingredient_name not in shop_list:
+                    shop_list[ingredient_name] = {
+                        'measure': measure,
+                        'quantity': quantity
+                    }
+                else:
+                    shop_list[ingredient_name]['quantity'] += quantity
+
+    shop_list = get_shop_list_by_dishes(['Омлет'], 4, cook_book)
+
+    return shop_list
+
+
+
 
 def main():
     """Главная функция программы."""
