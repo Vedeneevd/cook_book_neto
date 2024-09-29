@@ -1,31 +1,38 @@
-def display_recipe(cook_book):
-    """Выводит все рецепты из кулинарной книги в заданном формате."""
-    for dish, ingredients in cook_book.items():
-        print(dish)
-        print(len(ingredients))  # Вывод количества ингредиентов
-        for ingredient in ingredients:
-            print(f"{ingredient['ingredient_name']} | {ingredient['quantity']} | {ingredient['measure']}")
-        print()  # Пустая строка для разделения рецептов
+def load_recipes(filename):
+    """Загрузка рецептов из файла."""
+    recipes = {}
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+            index = 0
 
+            while index < len(lines):
+                recipe_name = lines[index].strip()
+                index += 1
 
-def add_recipe(cook_book):
-    """Добавляет новый рецепт в кулинарную книгу."""
-    dish = input("Введите название блюда: ")
-    num_ingredients = int(input("Введите количество ингредиентов: "))
+                if index >= len(lines):
+                    break
 
-    ingredients = []
-    for _ in range(num_ingredients):
-        ingredient_name = input("Введите название ингредиента: ")
-        quantity = float(input("Введите количество: "))
-        measure = input("Введите единицу измерения: ")
-        ingredients.append({
-            'ingredient_name': ingredient_name,
-            'quantity': quantity,
-            'measure': measure
-        })
+                num_ingredients = int(lines[index].strip())
+                index += 1
 
-    cook_book[dish] = ingredients
-    print(f"Рецепт '{dish}' добавлен!")
+                ingredients = []
+                for _ in range(num_ingredients):
+                    if index < len(lines):
+                        part = lines[index].strip().split(' | ')
+                        ingredient = {
+                            'ingredient_name': part[0],
+                            'quantity': float(part[1]),
+                            'measure': part[2]
+                        }
+                        ingredients.append(ingredient)
+                        index += 1
+
+                recipes[recipe_name] = ingredients
+    except FileNotFoundError:
+        print(f"Файл {filename} не найден.")
+
+    return recipes
 
 
 def save_to_file(cook_book, filename):
@@ -36,75 +43,65 @@ def save_to_file(cook_book, filename):
             file.write(f"{len(ingredients)}\n")
             for ingredient in ingredients:
                 file.write(f"{ingredient['ingredient_name']} | {ingredient['quantity']} | {ingredient['measure']}\n")
+            file.write("\n")  # Пустая строка для разделения рецептов
 
 
-def load_from_file(filename):
-    """Загружает кулинарную книгу из файла."""
-    cook_book = {}
-    try:
-        with open(filename, 'r', encoding='utf-8') as file:
-            lines = file.readlines()
-            i = 0
-            while i < len(lines):
-                dish = lines[i].strip()
-                num_ingredients = int(lines[i + 1].strip())
-                ingredients = []
-                for j in range(num_ingredients):
-                    ingredient_info = lines[i + 2 + j].strip().split(' | ')
-                    ingredient_name = ingredient_info[0]
-                    quantity = float(ingredient_info[1])
-                    measure = ingredient_info[2]
-                    ingredients.append({'ingredient_name': ingredient_name, 'quantity': quantity, 'measure': measure})
-                cook_book[dish] = ingredients
-                i += num_ingredients + 2
-    except FileNotFoundError:
-        print(f"Файл '{filename}' не найден.")
-    return cook_book
+def print_recipes(recipes):
+    """Вывод всех рецептов на экран."""
+    if not recipes:
+        print("Нет доступных рецептов.")
+        return
+
+    for name, ingredients in recipes.items():
+        print(f"Рецепт: {name}")
+        print("Ингредиенты:")
+        for ingredient in ingredients:
+            print(f"- {ingredient['ingredient_name']} | {ingredient['quantity']} | {ingredient['measure']}")
+        print("-" * 40)
+
+
+def add_recipe(filename):
+    """Добавление нового рецепта."""
+    recipe_name = input("Введите название рецепта: ")
+    num_ingredients = int(input("Введите количество ингредиентов: "))
+    ingredients = []
+
+    for _ in range(num_ingredients):
+        ingredient_name = input("Введите название ингредиента: ")
+        quantity = float(input("Введите количество ингредиента: "))
+        measure = input("Введите единицы измерения: ")
+        ingredient = {
+            'ingredient_name': ingredient_name,
+            'quantity': quantity,
+            'measure': measure
+        }
+        ingredients.append(ingredient)
+
+    return recipe_name, ingredients
 
 
 def main():
-    cook_book = {
-        'Омлет': [
-            {'ingredient_name': 'Яйцо', 'quantity': 2, 'measure': 'шт.'},
-            {'ingredient_name': 'Молоко', 'quantity': 100, 'measure': 'мл'},
-            {'ingredient_name': 'Помидор', 'quantity': 2, 'measure': 'шт'}
-        ],
-        'Утка по-пекински': [
-            {'ingredient_name': 'Утка', 'quantity': 1, 'measure': 'шт'},
-            {'ingredient_name': 'Вода', 'quantity': 2, 'measure': 'л'},
-            {'ingredient_name': 'Мед', 'quantity': 3, 'measure': 'ст.л'},
-            {'ingredient_name': 'Соевый соус', 'quantity': 60, 'measure': 'мл'}
-        ],
-        'Запеченный картофель': [
-            {'ingredient_name': 'Картофель', 'quantity': 1, 'measure': 'кг'},
-            {'ingredient_name': 'Чеснок', 'quantity': 3, 'measure': 'зубч'},
-            {'ingredient_name': 'Сыр гауда', 'quantity': 100, 'measure': 'г'},
-        ]
-    }
-
-    filename = 'cook_book.txt'
+    """Главная функция программы."""
+    filename = 'recipes.txt'
+    cook_book = load_recipes(filename)
 
     while True:
-        print("1. Показать все рецепты")
+        print("1. Показать рецепты")
         print("2. Добавить новый рецепт")
-        print("3. Сохранить рецепты в файл")
-        print("4. Загрузить рецепты из файла")
-        print("5. Выход")
-
-        choice = input("Выберите опцию: ")
+        print("3. Выход")
+        choice = input("Выберите действие: ")
 
         if choice == '1':
-            display_recipe(cook_book)
+            print_recipes(cook_book)
         elif choice == '2':
-            add_recipe(cook_book)
-        elif choice == '3':
+            recipe_name, ingredients = add_recipe(filename)
+            cook_book[recipe_name] = ingredients
             save_to_file(cook_book, filename)
-        elif choice == '4':
-            cook_book = load_from_file(filename)
-        elif choice == '5':
+            print("Рецепт успешно добавлен!")
+        elif choice == '3':
             break
         else:
-            print("Неверный выбор, попробуйте снова.")
+            print("Неверный выбор. Пожалуйста, выберите снова.")
 
 
 if __name__ == '__main__':
